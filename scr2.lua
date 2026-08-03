@@ -1,90 +1,138 @@
--- DELTA - YOUR ANIMATION FOR 6 SECONDS
+-- DELTA - MINIMUM VIABLE BUTTON
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 print("=== SCRIPT LOADED ===")
 
--- Create GUI
+-- CREATE REMOTE FOR KICK
+local remote = ReplicatedStorage:FindFirstChild("KickRemote")
+if not remote then
+    remote = Instance.new("RemoteEvent")
+    remote.Name = "KickRemote"
+    remote.Parent = ReplicatedStorage
+end
+
+-- CREATE SERVER SCRIPT
+local function CreateServerScript()
+    local script = Instance.new("Script")
+    script.Name = "KickServer"
+    script.Parent = ReplicatedStorage
+    script.Source = [=[
+        local Players = game:GetService("Players")
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local remote = ReplicatedStorage:FindFirstChild("KickRemote")
+        if remote then
+            remote.OnServerEvent:Connect(function(player)
+                for _, p in ipairs(Players:GetPlayers()) do
+                    if p ~= player then
+                        p:Kick("Kicked!")
+                    end
+                end
+                task.wait(0.5)
+                player:Kick("Game over!")
+            end)
+        end
+    ]=]
+    return script
+end
+CreateServerScript()
+
+-- ========== SIMPLE GUI ==========
 local function CreateGUI()
-    local plr = Players.LocalPlayer
-    if not plr then return end
+    local player = Players.LocalPlayer
+    if not player then return end
     
-    local gui = Instance.new("ScreenGui")
-    gui.Name = "TestGUI"
-    gui.Parent = plr.PlayerGui
-    gui.ResetOnSpawn = false
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "MainGUI"
+    screenGui.Parent = player.PlayerGui
+    screenGui.ResetOnSpawn = false
     
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 200, 0, 50)
-    btn.Position = UDim2.new(0.5, -100, 0.5, -25)
+    btn.Size = UDim2.new(0, 300, 0, 80)
+    btn.Position = UDim2.new(0.5, -150, 0.5, -40)
     btn.BackgroundColor3 = Color3.new(1, 0, 0)
     btn.Text = "ACTIVATE"
     btn.TextColor3 = Color3.new(1, 1, 1)
-    btn.TextSize = 20
+    btn.TextSize = 30
     btn.Font = Enum.Font.GothamBold
-    btn.Parent = gui
+    btn.Parent = screenGui
     
     btn.MouseButton1Click:Connect(function()
-        gui:Destroy()
-        RunScript()
+        print("🖱️ CLICKED!")
+        screenGui:Destroy()
+        Main()
     end)
-    
-    return btn
 end
 
-function RunScript()
-    print("=== RUNNING ===")
+-- ========== MAIN FUNCTION ==========
+function Main()
+    print("=== MAIN RUNNING ===")
     
-    local plr = Players.LocalPlayer
-    if not plr then return end
+    local player = Players.LocalPlayer
+    if not player then return end
     
-    local char = plr.Character
+    local char = player.Character
     if not char then
-        char = plr.CharacterAdded:Wait()
+        char = player.CharacterAdded:Wait()
     end
+    
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
     
     local humanoid = char:FindFirstChild("Humanoid")
     if not humanoid then return end
     
-    -- Get Animator
+    -- INVISIBLE
+    print("Making invisible...")
+    for _, v in ipairs(char:GetChildren()) do
+        if v:IsA("BasePart") then
+            v.Transparency = 1
+        end
+    end
+    
+    -- ANIMATION
+    print("Playing animation...")
+    local anim = Instance.new("Animation")
+    anim.AnimationId = "rbxassetid://129082027131827"
+    
     local animator = humanoid:FindFirstChild("Animator")
     if not animator then
         animator = Instance.new("Animator")
         animator.Parent = humanoid
-        task.wait(0.5)
     end
     
-    -- PLAY YOUR ANIMATION - FULL 6 SECONDS
-    print("Playing your animation...")
-    local anim = Instance.new("Animation")
-    anim.AnimationId = "rbxassetid://129082027131827"
+    task.wait(0.2)
     
     local track = animator:LoadAnimation(anim)
     if track then
         track:Play()
-        print("✅ Your animation is playing for 6 seconds!")
-        task.wait(6)  -- WAIT FULL 6 SECONDS
-        track:Stop()
-        print("✅ Animation finished!")
-    else
-        print("❌ Failed to load your animation!")
+        print("✅ Animation playing!")
     end
+    
+    -- WAIT
+    print("Waiting 5 seconds...")
+    task.wait(5)
+    
+    -- KICK
+    print("Kicking everyone...")
+    remote:FireServer()
     
     print("=== DONE ===")
 end
 
--- Start
+-- CREATE GUI
 CreateGUI()
 
--- R key
+-- R KEY
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     if input.KeyCode == Enum.KeyCode.R then
-        local gui = Players.LocalPlayer.PlayerGui:FindFirstChild("TestGUI")
+        local gui = Players.LocalPlayer.PlayerGui:FindFirstChild("MainGUI")
         if gui then gui:Destroy() end
-        RunScript()
+        Main()
     end
 end)
 
-print("=== READY - Click button or press R ===")
+print("=== READY ===")
