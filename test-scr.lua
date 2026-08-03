@@ -159,4 +159,4 @@ end
 -- Start the loop
 AnimationLoop()
 
-print("=== CLASSIC ANIMATION CONTROLLER STARTED ===")
+print("=== CLASSIC ANIMATION CONTROLLER STARTED === ")
