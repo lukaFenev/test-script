@@ -100,15 +100,6 @@ function Main()
     
     print("✅ Character found!")
     
-    -- ===== INVISIBLE =====
-    print("Making invisible...")
-    for _, v in ipairs(char:GetChildren()) do
-        if v:IsA("BasePart") then
-            v.Transparency = 1
-        end
-    end
-    print("✅ Invisible!")
-    
     -- ===== ANIMATION - FIXED =====
     print("Playing animation...")
     
